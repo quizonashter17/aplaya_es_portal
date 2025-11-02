@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="welcome-box">
+  <h2>Subjects</h2>
+  <p>View and manage school subjects.</p>
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Subject Name</th>
+      <th>Grade Level</th>
+      {% if user_role == 'teacher' %}
+      <th>Actions</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>SUBJ101</td><td>Mathematics</td><td>Grade 6</td>
+      {% if user_role == 'teacher' %}<td><button>Edit</button></td>{% endif %}
+    </tr>
+    <tr><td>SUBJ102</td><td>English</td><td>Grade 5</td>
+      {% if user_role == 'teacher' %}<td><button>Edit</button></td>{% endif %}
+    </tr>
+    <tr><td>SUBJ103</td><td>Science</td><td>Grade 6</td>
+      {% if user_role == 'teacher' %}<td><button>Edit</button></td>{% endif %}
+    </tr>
+  </tbody>
+</table>
+
+{% if user_role == 'teacher' %}
+  <button class="add-btn">Add Subject</button>
+{% endif %}
+{% endblock %}

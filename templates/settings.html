@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="welcome-box">
+  <h2>Settings</h2>
+  <p>Change your preferences or update your information.</p>
+</div>
+
+<form class="settings-form">
+  <label>School Name</label>
+  <input type="text" value="Aplaya Elementary School">
+
+  <label>Email Address</label>
+  <input type="email" value="ashterquizon17@gmail.com">
+
+  <label>Theme</label>
+  <select>
+    <option>Light</option>
+    <option>Dark</option>
+  </select>
+
+  <button type="submit">Save Changes</button>
+</form>
+{% endblock %}

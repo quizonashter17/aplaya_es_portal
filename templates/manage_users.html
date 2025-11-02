@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="welcome-box">
+  <h2>Manage Users</h2>
+  <p>View, add, and manage all user accounts in the system.</p>
+</div>
+
+<div class="table-actions">
+  <button class="add-btn">+ Add User</button>
+  <input type="text" placeholder="Search user..." class="search-box">
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>User ID</th>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Email</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1001</td>
+      <td>Mr. Santos</td>
+      <td>Teacher</td>
+      <td>santos@aplayaes.edu.ph</td>
+      <td>
+        <button class="edit-btn">Edit</button>
+        <button class="delete-btn">Delete</button>
+      </td>
+    </tr>
+    <tr>
+      <td>2001</td>
+      <td>Maria Dela Cruz</td>
+      <td>Student</td>
+      <td>maria.cruz@aplayaes.edu.ph</td>
+      <td>
+        <button class="edit-btn">Edit</button>
+        <button class="delete-btn">Delete</button>
+      </td>
+    </tr>
+    <tr>
+      <td>3001</td>
+      <td>Admin User</td>
+      <td>Admin</td>
+      <td>admin@aplayaes.edu.ph</td>
+      <td>
+        <button class="edit-btn">Edit</button>
+        <button class="delete-btn">Delete</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+{% endblock %}

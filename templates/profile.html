@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="profile-page">
+  <div class="profile-container">
+    <!-- LEFT SIDE -->
+    <div class="profile-left">
+      <form action="{{ url_for('upload_profile') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+        <img src="{{ url_for('static', filename='uploads/profile.jpg') }}" alt="Profile Photo" class="profile-pic-large" id="profilePreview">
+        <label for="profile_pic" class="upload-label">Change Photo</label>
+        <input type="file" name="profile_pic" id="profile_pic" accept="image/*" onchange="this.form.submit()">
+      </form>
+
+      <h2>Ashter Quizon</h2>
+      <p class="role">Student / Admin</p>
+      <p class="joined">Joined: March 15, 2024</p>
+      <a href="{{ url_for('dashboard') }}" class="logout-btn">Logout</a>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="profile-right">
+      <h3>Personal Information</h3>
+      <div class="info-grid">
+        <div><strong>Full Name:</strong> Ashter Quizon</div>
+        <div><strong>Email:</strong> ashterquizon17@gmail.com</div>
+        <div><strong>Phone:</strong> +63 912 345 6789</div>
+        <div><strong>Address:</strong> Aplaya, Sta. Rosa, Laguna</div>
+        <div><strong>Department:</strong> ICT</div>
+        <div><strong>Role:</strong> Student / Admin</div>
+      </div>
+
+      <h3>About</h3>
+      <p class="bio">
+        Passionate about technology and education. Dedicated to improving digital systems for schools and making learning accessible for everyone.
+      </p>
+
+      <div class="button-group">
+        <a href="#" class="edit-btn">Edit Profile</a>
+        <a href="#" class="change-pass-btn">Change Password</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Optional: preview the new image before upload
+  document.getElementById('profile_pic').addEventListener('change', function(e) {
+    const [file] = e.target.files;
+    if (file) {
+      document.getElementById('profilePreview').src = URL.createObjectURL(file);
+    }
+  });
+</script>
+{% endblock %}

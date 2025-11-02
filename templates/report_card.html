@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-content">
+  <h2>Report Card</h2>
+  <p>View student grades and performance records below:</p>
+
+  <table class="styled-table">
+    <thead>
+      <tr>
+        <th>Subject</th>
+        <th>1st Quarter</th>
+        <th>2nd Quarter</th>
+        <th>3rd Quarter</th>
+        <th>4th Quarter</th>
+        <th>Final Grade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>English</td>
+        <td>90</td>
+        <td>92</td>
+        <td>91</td>
+        <td>93</td>
+        <td><b>92</b></td>
+      </tr>
+      <tr>
+        <td>Math</td>
+        <td>88</td>
+        <td>89</td>
+        <td>87</td>
+        <td>90</td>
+        <td><b>89</b></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

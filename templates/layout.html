@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ title }} | Aplaya-ES Online</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/logo1.png') }}">
+</head>
+<body>
+
+  <!-- === SIDEBAR === -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="{{ url_for('static', filename='icons/logo1.png') }}" alt="Logo" class="logo-img">
+      <h2 class="logo-text">Aplaya-ES Online</h2>
+    </div>
+
+    <nav class="menu">
+
+      <!-- ===== Dashboard (Dynamic by Role) ===== -->
+      <a href="{% if user_role == 'principal' %}{{ url_for('principal_dashboard') }}
+                {% elif user_role == 'teacher' %}{{ url_for('teacher_dashboard') }}
+                {% elif user_role == 'student' %}{{ url_for('student_dashboard') }}
+                {% else %}{{ url_for('dashboard') }}{% endif %}"
+         class="menu-item {% if active == 'dashboard' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/home.png') }}" alt="Dashboard Icon"> 
+        <span>Dashboard</span>
+      </a>
+
+      <!-- ===== Principal Menus ===== -->
+      {% if user_role == 'principal' %}
+      <a href="{{ url_for('teachers_page') }}" 
+         class="menu-item {% if active == 'teachers' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/teachers.png') }}" alt="Teachers Icon"> 
+        <span>Teachers</span>
+      </a>
+
+      <a href="{{ url_for('subjects') }}" 
+         class="menu-item {% if active == 'subjects' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/subjects.png') }}" alt="Subjects Icon"> 
+        <span>Subjects</span>
+      </a>
+
+      <a href="{{ url_for('report_card') }}" 
+         class="menu-item {% if active == 'report_card' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/report.png') }}" alt="Reports Icon"> 
+        <span>Reports</span>
+      </a>
+      {% endif %}
+
+      <!-- ===== Teacher Menus ===== -->
+      {% if user_role == 'teacher' %}
+      <a href="{{ url_for('teacher_students') }}" 
+         class="menu-item {% if active == 'teachers_students' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/teachers.png') }}" alt="My Students Icon"> 
+        <span>My Students</span>
+      </a>
+      {% endif %}
+
+      <!-- ===== Student Menus ===== -->
+      {% if user_role == 'student' %}
+      <a href="{{ url_for('student_dashboard') }}" 
+         class="menu-item {% if active == 'student_dashboard' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/subjects.png') }}" alt="Subjects Icon"> 
+        <span>My Subjects</span>
+      </a>
+
+      <a href="{{ url_for('schedule') }}" 
+         class="menu-item {% if active == 'schedule' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/schedule.png') }}" alt="Schedule Icon"> 
+        <span>Schedule</span>
+      </a>
+
+      <a href="{{ url_for('enrollment') }}" 
+         class="menu-item {% if active == 'enrollment' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/enrollment.png') }}" alt="Enrollment Icon"> 
+        <span>Enrollment</span>
+      </a>
+
+      <a href="{{ url_for('report_card') }}" 
+         class="menu-item {% if active == 'report_card' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/report.png') }}" alt="Report Card Icon"> 
+        <span>Report Card</span>
+      </a>
+      {% endif %}
+
+      <!-- ===== Shared Menus ===== -->
+      <a href="{{ url_for('settings') }}" 
+         class="menu-item {% if active == 'settings' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/settings.png') }}" alt="Settings Icon"> 
+        <span>Settings</span>
+      </a>
+
+      <a href="{{ url_for('logout') }}" class="menu-item logout">
+        <img src="{{ url_for('static', filename='icons/logout.png') }}" alt="Logout Icon"> 
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- === HEADER / TOPBAR === -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 class="page-title">{{ title }}</h1>
+    </div>
+
+    <div class="user-section">
+      <button class="notif-btn" title="Notifications">
+        <img src="{{ url_for('static', filename='icons/bell.png') }}" alt="Notifications" class="icon">
+      </button>
+
+      <a href="{{ url_for('profile') }}" title="Profile">
+        <img src="{{ profile_pic }}" alt="Profile Picture" class="profile">
+      </a>
+    </div>
+  </header>
+
+  <!-- === MAIN CONTENT AREA === -->
+  <main class="main">
+    <section class="content-area">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+
+</body>
+</html>

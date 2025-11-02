@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-header">
+  <h2>👩‍🎓 Student List</h2>
+  <p>Manage and view all enrolled students below.</p>
+</div>
+
+<div class="table-container">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Grade</th>
+        <th>Section</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1001</td>
+        <td>Ashter Quizon</td>
+        <td>6</td>
+        <td>Diamond</td>
+        <td><span class="status active">Active</span></td>
+      </tr>
+      <tr>
+        <td>1002</td>
+        <td>Mark Reyes</td>
+        <td>5</td>
+        <td>Ruby</td>
+        <td><span class="status active">Active</span></td>
+      </tr>
+      <tr>
+        <td>1003</td>
+        <td>Ella Santos</td>
+        <td>6</td>
+        <td>Emerald</td>
+        <td><span class="status inactive">Inactive</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

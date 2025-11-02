@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | School Portal</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      background-color: var(--bg-color);
+      font-family: var(--font-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background: #ffffff;
+      width: 400px;
+      padding: 40px 30px;
+      border-radius: var(--radius);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+
+    .login-container img {
+      width: 100px;
+      margin-bottom: 15px;
+    }
+
+    .login-container h2 {
+      color: var(--accent-color);
+      margin-bottom: 25px;
+      font-weight: 700;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .login-form input,
+    .login-form select {
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .login-form input:focus,
+    .login-form select:focus {
+      border-color: var(--accent-color);
+    }
+
+    .login-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .login-btn:hover {
+      background-color: #1b9a5c;
+    }
+
+    .footer-text {
+      margin-top: 18px;
+      color: var(--text-light);
+      font-size: 13px;
+    }
+
+    /* Fade animation */
+    .fade-out {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .fade-in {
+      opacity: 1;
+      transition: opacity 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <img src="{{ url_for('static', filename='icons/logo1.png') }}" alt="Portal Logo">
+    <h2>Aplaya-ES Online</h2>
+    <form method="POST" action="{{ url_for('login') }}" class="login-form">
+      <input type="text" name="username" id="username" placeholder="Username" required>
+      <input type="password" name="password" placeholder="Password" required>
+      
+      <!-- Role Selector -->
+      <select name="role" id="roleSelect" required class="fade-in">
+        <option value="" disabled selected>Select Role</option>
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+      </select>
+
+      <button type="submit" class="login-btn">Login</button>
+    </form>
+    <p class="footer-text">© 2025 Aplaya Elementary School Portal</p>
+  </div>
+
+  <!-- JS: Hide role when admin typed -->
+  <script>
+    const usernameInput = document.getElementById('username');
+    const roleSelect = document.getElementById('roleSelect');
+
+    usernameInput.addEventListener('input', () => {
+      const value = usernameInput.value.trim().toLowerCase();
+      if (value === 'admin' , 'principal') {
+        roleSelect.classList.remove('fade-in');
+        roleSelect.classList.add('fade-out');
+        setTimeout(() => {
+          roleSelect.style.display = 'none';
+          roleSelect.removeAttribute('required');
+        }, 400);
+      } else {
+        roleSelect.style.display = 'block';
+        roleSelect.classList.remove('fade-out');
+        roleSelect.classList.add('fade-in');
+        roleSelect.setAttribute('required', '');
+      }
+    });
+  </script>
+</body>
+</html>

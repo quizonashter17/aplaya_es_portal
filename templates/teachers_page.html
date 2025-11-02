@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-box">
+  <h2>Add New Teacher</h2>
+  <form action="{{ url_for('add_teacher') }}" method="POST" class="form-section">
+    <label>Full Name:</label>
+    <input type="text" name="name" required>
+    
+    <label>Username:</label>
+    <input type="text" name="username" required>
+    
+    <label>Password:</label>
+    <input type="password" name="password" required>
+    
+    <label>Subject:</label>
+    <input type="text" name="subject" required>
+    
+    <label>Grade Level:</label>
+    <input type="text" name="grade_level" required>
+    
+    <button type="submit" class="add-btn">Add Teacher</button>
+  </form>
+
+  <hr>
+
+  <h2>Teachers List</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Full Name</th>
+        <th>Subject</th>
+        <th>Grade Level</th>
+        <th>Username</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if teachers %}
+        {% for t in teachers %}
+          <tr>
+            <td>{{ t.id }}</td>
+            <td>{{ t.full_name }}</td>
+            <td>{{ t.subject }}</td>
+            <td>{{ t.grade_level }}</td>
+            <td>{{ t.username }}</td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="5">No teachers found.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
