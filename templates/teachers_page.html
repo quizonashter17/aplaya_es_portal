@@ -5,25 +5,23 @@
   <form action="{{ url_for('add_teacher') }}" method="POST" class="form-section">
     <label>Full Name:</label>
     <input type="text" name="name" required>
-    
+
     <label>Username:</label>
     <input type="text" name="username" required>
-    
+
     <label>Password:</label>
     <input type="password" name="password" required>
-    
+
     <label>Subject:</label>
     <input type="text" name="subject" required>
-    
+
     <label>Grade Level:</label>
     <input type="text" name="grade_level" required>
-    
+
     <button type="submit" class="add-btn">Add Teacher</button>
   </form>
 
-  <hr>
-
-  <h2>Teachers List</h2>
+  <h3>Teachers List</h3>
   <table class="data-table">
     <thead>
       <tr>
@@ -36,13 +34,13 @@
     </thead>
     <tbody>
       {% if teachers %}
-        {% for t in teachers %}
+        {% for teacher in teachers %}
           <tr>
-            <td>{{ t.id }}</td>
-            <td>{{ t.full_name }}</td>
-            <td>{{ t.subject }}</td>
-            <td>{{ t.grade_level }}</td>
-            <td>{{ t.username }}</td>
+            <td>{{ teacher.id }}</td>
+            <td>{{ teacher.name }}</td>
+            <td>{{ teacher.subject or 'N/A' }}</td>
+            <td>{{ teacher.grade_level or 'N/A' }}</td>
+            <td>{{ teacher.username }}</td>
           </tr>
         {% endfor %}
       {% else %}

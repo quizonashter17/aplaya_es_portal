@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Pending Enrollment Requests</h2>
+
+    {% if requests|length == 0 %}
+        <div class="alert alert-info text-center">No pending requests at this time.</div>
+    {% else %}
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Name</th>
+                    <th>Grade Level</th>
+                    <th>Section</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in requests %}
+                <tr>
+                    <td>{{ r.full_name }}</td>
+                    <td>{{ r.grade_level }}</td>
+                    <td>{{ r.section }}</td>
+                    <td class="text-center">
+                        <form action="{{ url_for('approve_enrollment', req_id=r.id) }}" method="POST" style="display:inline;">
+                            <button class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                        <form action="{{ url_for('reject_enrollment', req_id=r.id) }}" method="POST" style="display:inline;">
+                            <button class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+
+{% endblock %}

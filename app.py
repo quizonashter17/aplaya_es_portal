@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import os
 from werkzeug.utils import secure_filename
+from datetime import datetime
 from supabase import create_client, Client
 
 # === FLASK SETUP ===
@@ -16,11 +17,9 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
-
 # === HELPERS ===
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
 
 def get_profile_pic():
     profile_pic_path = os.path.join(app.config['UPLOAD_FOLDER'], 'profile.jpg')
@@ -28,6 +27,10 @@ def get_profile_pic():
         return url_for('static', filename='uploads/profile.jpg')
     return url_for('static', filename='uploads/default.jpg')
 
+def current_school_year():
+    """Return school year like '2025-2026'."""
+    y = datetime.utcnow().year
+    return f"{y}-{y+1}"
 
 @app.context_processor
 def inject_user_data():
@@ -37,10 +40,9 @@ def inject_user_data():
         'profile_pic': get_profile_pic()
     }
 
-
-# ===============================
-# === LOGIN SYSTEM ===
-# ===============================
+# ==================================================
+# LOGIN SYSTEM
+# ==================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -49,6 +51,7 @@ def login():
         password = request.form.get('password', '').strip()
 
         try:
+            # NOTE: For production, NEVER store plaintext passwords.
             result = supabase.table("users").select("*").eq("username", username).eq("password", password).execute()
             if result.data:
                 user = result.data[0]
@@ -67,19 +70,18 @@ def login():
             else:
                 error = "Invalid username or password."
         except Exception as e:
+            app.logger.exception("Login error")
             error = f"Database error: {e}"
 
     return render_template('login.html', error=error)
 
-
-# === LOGOUT ===
+# LOGOUT
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-
-# === MAIN ROUTER ===
+# MAIN ROUTER
 @app.route('/')
 def dashboard():
     if 'user_role' not in session:
@@ -94,25 +96,134 @@ def dashboard():
         return redirect(url_for('student_dashboard'))
     return redirect(url_for('login'))
 
-
-# ===============================
-# === PRINCIPAL DASHBOARD ===
-# ===============================
+# ==================================================
+# PRINCIPAL DASHBOARD
+# ==================================================
 @app.route('/principal_dashboard')
 def principal_dashboard():
     if session.get('user_role') != 'principal':
         return redirect(url_for('login'))
     return render_template('principal_dashboard.html', title="Principal Dashboard")
 
+# VIEW ENROLLMENT REQUESTS (enriched with student details)
+@app.route('/principal/enrollment_requests')
+def view_enrollment_requests():
+    if session.get('user_role') != 'principal':
+        return redirect(url_for('login'))
 
+    try:
+        requests_list = supabase.table("enrollment_requests").select("*").eq("status", "pending").execute().data or []
+    except Exception:
+        app.logger.exception("Failed to load enrollment_requests")
+        requests_list = []
+
+    enriched = []
+    for r in requests_list:
+        try:
+            # Try to load students row (if you want to show persisted student info)
+            student_rows = supabase.table("students").select("*").eq("id", r.get('student_id')).execute().data or []
+            student = student_rows[0] if student_rows else {}
+        except Exception:
+            student = {}
+
+        # Build consistent view object (include "name" for older templates that use r.name)
+        name = (r.get('full_name') or student.get('full_name') or "").strip()
+
+        enriched.append({
+            "id": r.get('id'),
+            "student_id": r.get('student_id'),
+            "name": name,
+            "full_name": name,  # both keys available
+            "age": r.get('age') or student.get('age'),
+            "birthday": r.get('birthday') or student.get('birthday'),
+            "gender": r.get('gender') or student.get('gender'),
+            "address": r.get('address') or student.get('address'),
+            "parent_name": r.get('parent_name') or student.get('parent_name'),
+            "parent_contact": r.get('parent_contact') or student.get('parent_contact'),
+            "grade_level": r.get('grade_level'),
+            "section": r.get('section'),
+            "school_year": r.get('school_year'),
+            "status": r.get('status'),
+            "submitted_at": r.get('submitted_at'),
+            "updated_at": r.get('updated_at'),
+        })
+
+    return render_template('principal_enrollment_requests.html',
+                           title="Enrollment Requests",
+                           requests=enriched)
+
+# APPROVE ENROLLMENT
+@app.route('/approve_enrollment/<int:req_id>', methods=['POST'])
+def approve_enrollment(req_id):
+    if session.get('user_role') != 'principal':
+        return redirect(url_for('login'))
+
+    try:
+        req = supabase.table("enrollment_requests").select("*").eq("id", req_id).single().execute()
+    except Exception:
+        req = None
+
+    if not req or not getattr(req, "data", None):
+        # try fallback to normal select (no single) if PostgREST error
+        try:
+            rows = supabase.table("enrollment_requests").select("*").eq("id", req_id).execute().data or []
+            req_row = rows[0] if rows else None
+        except Exception:
+            req_row = None
+    else:
+        req_row = req.data
+
+    if not req_row:
+        return "Request not found.", 404
+
+    # Update student's grade/section in students table (if desired)
+    student_id = req_row.get('student_id')
+    try:
+        supabase.table("students").update({
+            "grade_level": req_row.get('grade_level'),
+            "section": req_row.get('section'),
+            "full_name": req_row.get('full_name') or None
+        }).eq("id", student_id).execute()
+    except Exception:
+        app.logger.exception("Failed to update student during approval (non-fatal)")
+
+    # Mark request as approved
+    try:
+        supabase.table("enrollment_requests").update({
+            "status": "approved",
+            "updated_at": datetime.utcnow()
+        }).eq("id", req_id).execute()
+    except Exception:
+        app.logger.exception("Failed to mark enrollment_requests as approved")
+
+    return redirect(url_for('view_enrollment_requests'))
+
+# REJECT ENROLLMENT
+@app.route('/reject_enrollment/<int:req_id>', methods=['POST'])
+def reject_enrollment(req_id):
+    if session.get('user_role') != 'principal':
+        return redirect(url_for('login'))
+
+    try:
+        supabase.table("enrollment_requests").update({
+            "status": "rejected",
+            "updated_at": datetime.utcnow()
+        }).eq("id", req_id).execute()
+    except Exception:
+        app.logger.exception("reject_enrollment failed")
+
+    return redirect(url_for('view_enrollment_requests'))
+
+# ==================================================
+# TEACHERS
+# ==================================================
 @app.route('/teachers')
 def teachers_page():
     if session.get('user_role') != 'principal':
         return redirect(url_for('login'))
 
-    teachers = supabase.table("teachers").select("*").execute().data
+    teachers = supabase.table("teachers").select("*").execute().data or []
     return render_template('teachers.html', title="Teachers", teachers=teachers)
-
 
 @app.route('/add_teacher', methods=['POST'])
 def add_teacher():
@@ -128,21 +239,16 @@ def add_teacher():
     try:
         existing_user = supabase.table("users").select("id").eq("username", username).execute()
         if existing_user.data:
-            return "Username already exists. Please choose another one.", 400
+            return "Username already exists.", 400
 
-        # Create user first
         user_insert = supabase.table("users").insert({
             "username": username,
             "password": password,
             "role": "teacher"
         }).execute()
 
-        if not user_insert.data:
-            return "Error adding teacher user.", 400
-
         user_id = user_insert.data[0]['id']
 
-        # Create teacher record
         supabase.table("teachers").insert({
             "user_id": user_id,
             "full_name": full_name,
@@ -153,9 +259,8 @@ def add_teacher():
         return redirect(url_for('teachers_page'))
 
     except Exception as e:
-        print("Error adding teacher:", e)
-        return f"An error occurred: {str(e)}", 500
-
+        app.logger.exception("add_teacher failed")
+        return f"Error: {e}", 500
 
 @app.route('/delete_teacher/<int:teacher_id>', methods=['POST'])
 def delete_teacher(teacher_id):
@@ -166,38 +271,31 @@ def delete_teacher(teacher_id):
         teacher_data = supabase.table("teachers").select("user_id").eq("id", teacher_id).execute()
         if teacher_data.data:
             user_id = teacher_data.data[0]['user_id']
-
             supabase.table("teachers").delete().eq("id", teacher_id).execute()
             supabase.table("users").delete().eq("id", user_id).execute()
-    except Exception as e:
-        print("Error deleting teacher:", e)
-        return f"Error deleting teacher: {e}", 500
+    except Exception:
+        app.logger.exception("delete_teacher failed")
+        return f"Error deleting teacher: {teacher_id}", 500
 
     return redirect(url_for('teachers_page'))
 
-
-# ===============================
-# === TEACHER DASHBOARD ===
-# ===============================
+# ==================================================
+# TEACHER DASHBOARD / STUDENTS
+# ==================================================
 @app.route('/teacher_dashboard')
 def teacher_dashboard():
     if session.get('user_role') != 'teacher':
         return redirect(url_for('login'))
 
-    # Get teacher record
     teacher = supabase.table("teachers").select("id").eq("user_id", session['user_id']).execute()
     teacher_id = teacher.data[0]['id'] if teacher.data else None
 
     students = []
     if teacher_id:
-        students = supabase.table("students").select("*").eq("teacher_id", teacher_id).execute().data
+        students = supabase.table("students").select("*").eq("teacher_id", teacher_id).execute().data or []
 
     return render_template('teacher_dashboard.html', title="Teacher Dashboard", students_count=len(students))
 
-
-# ===============================
-# === TEACHER: MY STUDENTS PAGE ===
-# ===============================
 @app.route('/teacher/students')
 def teacher_students():
     if session.get('user_role') != 'teacher':
@@ -208,10 +306,9 @@ def teacher_students():
 
     students = []
     if teacher_id:
-        students = supabase.table("students").select("*").eq("teacher_id", teacher_id).execute().data
+        students = supabase.table("students").select("*").eq("teacher_id", teacher_id).execute().data or []
 
     return render_template('teachers_students.html', title="My Students", students=students)
-
 
 @app.route('/teacher/add_student', methods=['POST'])
 def add_student_teacher():
@@ -224,10 +321,9 @@ def add_student_teacher():
 
     try:
         username = full_name.replace(" ", "_").lower()
-
         existing = supabase.table("users").select("id").eq("username", username).execute()
         if existing.data:
-            return "A student with that name already exists.", 400
+            return "Student already exists.", 400
 
         user_insert = supabase.table("users").insert({
             "username": username,
@@ -235,17 +331,12 @@ def add_student_teacher():
             "role": "student"
         }).execute()
 
-        if not user_insert.data:
-            return "Error creating student user.", 400
-
         user_id = user_insert.data[0]['id']
 
-        # ✅ Get correct teacher.id (not user_id)
         teacher = supabase.table("teachers").select("id").eq("user_id", session['user_id']).execute()
         teacher_id = teacher.data[0]['id'] if teacher.data else None
-
         if not teacher_id:
-            return "Error: Teacher record not found.", 400
+            return "Teacher record not found.", 400
 
         supabase.table("students").insert({
             "user_id": user_id,
@@ -257,28 +348,22 @@ def add_student_teacher():
 
         return redirect(url_for('teacher_students'))
 
-    except Exception as e:
-        print("Error adding student:", e)
-        return f"An error occurred: {str(e)}", 500
-
+    except Exception:
+        app.logger.exception("add_student_teacher failed")
+        return f"Error adding student", 500
 
 @app.route('/teacher/edit_student/<int:student_id>', methods=['POST'])
 def edit_student(student_id):
     if session.get('user_role') != 'teacher':
         return redirect(url_for('login'))
 
-    full_name = request.form.get('full_name')
-    grade_level = request.form.get('grade_level')
-    section = request.form.get('section')
-
     supabase.table("students").update({
-        "full_name": full_name,
-        "grade_level": grade_level,
-        "section": section
+        "full_name": request.form.get('full_name'),
+        "grade_level": request.form.get('grade_level'),
+        "section": request.form.get('section')
     }).eq("id", student_id).execute()
 
     return redirect(url_for('teacher_students'))
-
 
 @app.route('/teacher/delete_student/<int:student_id>', methods=['POST'])
 def delete_student(student_id):
@@ -288,16 +373,15 @@ def delete_student(student_id):
     supabase.table("students").delete().eq("id", student_id).execute()
     return redirect(url_for('teacher_students'))
 
-
-# ===============================
-# === STUDENT DASHBOARD ===
-# ===============================
+# ==================================================
+# STUDENT DASHBOARD
+# ==================================================
 @app.route('/student_dashboard')
 def student_dashboard():
     if session.get('user_role') != 'student':
         return redirect(url_for('login'))
 
-    student_data = supabase.table("students").select("*").eq("user_id", session['user_id']).execute().data
+    student_data = supabase.table("students").select("*").eq("user_id", session['user_id']).execute().data or []
     return render_template('student_dashboard.html', title="Student Dashboard", student=student_data)
 
 @app.route('/schedule')
@@ -306,37 +390,153 @@ def schedule():
         return redirect(url_for('login'))
     return render_template('schedule.html', title="Schedule")
 
+# ==================================================
+# STUDENT ENROLLMENT (A1 flow)
+# ==================================================
 @app.route('/enrollment')
 def enrollment():
-    if 'user_role' not in session:
-        return redirect(url_for('login'))
+    # allow guest or logged-in users
     return render_template('enrollment.html', title="Enrollment")
 
+@app.route('/submit_enrollment', methods=['POST'])
+def submit_enrollment():
+    # Read form fields
+    full_name = (request.form.get('full_name') or "").strip()
+    age = request.form.get('age') or None
+    birthday = request.form.get('birthday') or None
+    gender = request.form.get('gender') or None
+    address = request.form.get('address') or None
+    parent_name = request.form.get('parent_name') or None
+    parent_contact = request.form.get('parent_contact') or None
+    grade_level = (request.form.get('grade_level') or "").strip()
+    section = request.form.get('section') or None
+    school_year = request.form.get('school_year') or current_school_year()
 
-# ===============================
-# === SHARED PAGES ===
-# ===============================
+    if not full_name or not grade_level:
+        return "Full name and grade level are required.", 400
+
+    user_id = session.get('user_id')
+
+    try:
+        # If guest: create users row (student) and set session
+        if not user_id:
+            base_username = full_name.replace(" ", "_").lower()
+            username = base_username
+            suffix = 1
+            while True:
+                exists = supabase.table("users").select("id").eq("username", username).execute()
+                if not exists.data:
+                    break
+                username = f"{base_username}{suffix}"
+                suffix += 1
+
+            default_password = "student123"
+            user_insert = supabase.table("users").insert({
+                "username": username,
+                "password": default_password,
+                "role": "student",
+                "email": None
+            }).execute()
+
+            if not user_insert.data:
+                app.logger.exception("Failed creating user for enrollment")
+                return "Failed to create user account.", 500
+
+            user_id = user_insert.data[0]['id']
+            session['user_id'] = user_id
+            session['user_role'] = 'student'
+            session['username'] = username
+
+        # Ensure students row exists for this user (and include personal details)
+        student_record = supabase.table("students").select("*").eq("user_id", user_id).execute()
+        if not student_record.data:
+            created = supabase.table("students").insert({
+                "user_id": user_id,
+                "teacher_id": None,
+                "full_name": full_name,
+                "grade_level": grade_level,
+                "section": section,
+                # these columns must exist in your students table for this to work:
+                "age": int(age) if age else None,
+                "birthday": birthday if birthday else None,
+                "gender": gender,
+                "address": address,
+                "parent_name": parent_name,
+                "parent_contact": parent_contact
+            }).execute()
+
+            if not created.data:
+                app.logger.exception("Failed to create student record during enrollment")
+                return "Failed to create student record.", 500
+
+            student_id = created.data[0]['id']
+        else:
+            student_id = student_record.data[0]['id']
+            # update student's basic info (non-fatal)
+            try:
+                supabase.table("students").update({
+                    "full_name": full_name,
+                    "grade_level": grade_level,
+                    "section": section,
+                    "age": int(age) if age else None,
+                    "birthday": birthday if birthday else None,
+                    "gender": gender,
+                    "address": address,
+                    "parent_name": parent_name,
+                    "parent_contact": parent_contact
+                }).eq("id", student_id).execute()
+            except Exception:
+                app.logger.exception("Non-fatal: failed to update existing student record")
+
+        # Insert enrollment request (store the full details for principal to view)
+        try:
+            supabase.table("enrollment_requests").insert({
+                "student_id": student_id,
+                "full_name": full_name,
+                "age": int(age) if age else None,
+                "birthday": birthday if birthday else None,
+                "gender": gender,
+                "address": address,
+                "parent_name": parent_name,
+                "parent_contact": parent_contact,
+                "grade_level": grade_level,
+                "section": section,
+                "school_year": school_year,
+                "status": "pending"
+            }).execute()
+        except Exception as e:
+            app.logger.exception("Enrollment insert failed")
+            err_txt = str(e)
+            if "unique_student_year" in err_txt or "duplicate" in err_txt.lower():
+                return "You have already submitted an enrollment request for this school year.", 400
+            return f"Enrollment failed: {e}", 400
+
+    except Exception as e:
+        app.logger.exception("submit_enrollment failed")
+        return f"Error processing enrollment: {e}", 500
+
+    return redirect(url_for('student_dashboard'))
+
+# ==================================================
+# SHARED PAGES
+# ==================================================
 @app.route('/subjects')
 def subjects():
-    return render_template('subjects.html', title="Subjects Page")
-
+    return render_template('subjects.html', title="Subjects")
 
 @app.route('/report_card')
 def report_card():
     return render_template('report_card.html', title="Report Card")
 
-
 @app.route('/settings')
 def settings():
     return render_template('settings.html', title="Settings")
-
 
 @app.route('/profile')
 def profile():
     if 'user_role' not in session:
         return redirect(url_for('login'))
     return render_template('profile.html', title="My Profile")
-
 
 @app.route('/upload_profile', methods=['POST'])
 def upload_profile():
@@ -346,9 +546,9 @@ def upload_profile():
     file = request.files['profile_pic']
     if file and allowed_file(file.filename):
         filename = secure_filename('profile.jpg')
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return redirect(url_for('profile'))
-
 
 # === MAIN RUN ===
 if __name__ == '__main__':

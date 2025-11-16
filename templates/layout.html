@@ -4,9 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{{ title }} | Aplaya-ES Online</title>
+
+  <!-- BOOTSTRAP CSS (REQUIRED FOR COLLAPSE) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- YOUR STYLES -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/logo1.png') }}">
+
+  <!-- BOOTSTRAP JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
+
 <body>
 
   <!-- === SIDEBAR === -->
@@ -17,7 +26,6 @@
     </div>
 
     <nav class="menu">
-
       <!-- ===== Dashboard (Dynamic by Role) ===== -->
       <a href="{% if user_role == 'principal' %}{{ url_for('principal_dashboard') }}
                 {% elif user_role == 'teacher' %}{{ url_for('teacher_dashboard') }}
@@ -30,29 +38,30 @@
 
       <!-- ===== Principal Menus ===== -->
       {% if user_role == 'principal' %}
-      <a href="{{ url_for('teachers_page') }}" 
-         class="menu-item {% if active == 'teachers' %}active{% endif %}">
+      <a href="{{ url_for('teachers_page') }}" class="menu-item {% if active == 'teachers' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/teachers.png') }}" alt="Teachers Icon"> 
         <span>Teachers</span>
       </a>
 
-      <a href="{{ url_for('subjects') }}" 
-         class="menu-item {% if active == 'subjects' %}active{% endif %}">
+      <a href="{{ url_for('subjects') }}" class="menu-item {% if active == 'subjects' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/subjects.png') }}" alt="Subjects Icon"> 
         <span>Subjects</span>
       </a>
 
-      <a href="{{ url_for('report_card') }}" 
-         class="menu-item {% if active == 'report_card' %}active{% endif %}">
+      <a href="{{ url_for('report_card') }}" class="menu-item {% if active == 'report_card' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/report.png') }}" alt="Reports Icon"> 
         <span>Reports</span>
+      </a>
+
+      <a href="{{ url_for('view_enrollment_requests') }}" class="menu-item {% if active == 'enrollment_requests' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='icons/enrollment.png') }}" alt="Enrollment Requests Icon"> 
+        <span>Enrollment Requests</span>
       </a>
       {% endif %}
 
       <!-- ===== Teacher Menus ===== -->
       {% if user_role == 'teacher' %}
-      <a href="{{ url_for('teacher_students') }}" 
-         class="menu-item {% if active == 'teachers_students' %}active{% endif %}">
+      <a href="{{ url_for('teacher_students') }}" class="menu-item {% if active == 'teachers_students' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/teachers.png') }}" alt="My Students Icon"> 
         <span>My Students</span>
       </a>
@@ -60,34 +69,29 @@
 
       <!-- ===== Student Menus ===== -->
       {% if user_role == 'student' %}
-      <a href="{{ url_for('student_dashboard') }}" 
-         class="menu-item {% if active == 'student_dashboard' %}active{% endif %}">
+      <a href="{{ url_for('student_dashboard') }}" class="menu-item {% if active == 'student_dashboard' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/subjects.png') }}" alt="Subjects Icon"> 
         <span>My Subjects</span>
       </a>
 
-      <a href="{{ url_for('schedule') }}" 
-         class="menu-item {% if active == 'schedule' %}active{% endif %}">
+      <a href="{{ url_for('schedule') }}" class="menu-item {% if active == 'schedule' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/schedule.png') }}" alt="Schedule Icon"> 
         <span>Schedule</span>
       </a>
 
-      <a href="{{ url_for('enrollment') }}" 
-         class="menu-item {% if active == 'enrollment' %}active{% endif %}">
+      <a href="{{ url_for('enrollment') }}" class="menu-item {% if active == 'enrollment' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/enrollment.png') }}" alt="Enrollment Icon"> 
         <span>Enrollment</span>
       </a>
 
-      <a href="{{ url_for('report_card') }}" 
-         class="menu-item {% if active == 'report_card' %}active{% endif %}">
+      <a href="{{ url_for('report_card') }}" class="menu-item {% if active == 'report_card' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/report.png') }}" alt="Report Card Icon"> 
         <span>Report Card</span>
       </a>
       {% endif %}
 
       <!-- ===== Shared Menus ===== -->
-      <a href="{{ url_for('settings') }}" 
-         class="menu-item {% if active == 'settings' %}active{% endif %}">
+      <a href="{{ url_for('settings') }}" class="menu-item {% if active == 'settings' %}active{% endif %}">
         <img src="{{ url_for('static', filename='icons/settings.png') }}" alt="Settings Icon"> 
         <span>Settings</span>
       </a>

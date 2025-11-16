@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<style>
+    /* Smooth slide animation */
+    .collapse {
+        transition: all 0.35s ease-in-out;
+    }
+
+    /* Arrow rotation */
+    .arrow {
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+
+    .rotate {
+        transform: rotate(90deg);
+    }
+
+    /* Details box styling */
+    .details-box {
+        border-left: 4px solid #0d6efd;
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+    }
+</style>
+
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4">Pending Enrollment Requests</h2>
+
+    {% if requests|length == 0 %}
+        <div class="alert alert-info text-center">No pending requests at this time.</div>
+    {% else %}
+
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Name</th>
+                    <th>Grade Level</th>
+                    <th>Section</th>
+                    <th>Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for r in requests %}
+                <tr>
+                    <td>{{ r.full_name }}</td>
+                    <td>{{ r.grade_level }}</td>
+                    <td>{{ r.section }}</td>
+
+                    <!-- BUTTON -->
+                    <td class="text-center">
+                        <button 
+                            class="btn btn-primary btn-sm details-btn"
+                            data-target="details{{ r.id }}">
+                            <span class="arrow">▶</span> View Details
+                        </button>
+                    </td>
+
+                    <!-- ACTION BUTTONS -->
+                    <td class="text-center">
+                        <form action="/approve_enrollment/{{ r.id }}" method="POST" style="display:inline;">
+                            <button class="btn btn-success btn-sm">Approve</button>
+                        </form>
+
+                        <form action="/reject_enrollment/{{ r.id }}" method="POST" style="display:inline;">
+                            <button class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+
+                <!-- COLLAPSIBLE ROW -->
+                <tr>
+                    <td colspan="5" class="p-0">
+                        <div id="details{{ r.id }}" class="collapse">
+
+                            <div class="details-box mt-2">
+                                <h5 class="mb-3">Student Information</h5>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Full Name:</strong> {{ r.full_name }}</p>
+                                        <p><strong>Age:</strong> {{ r.age }}</p>
+                                        <p><strong>Birthday:</strong> {{ r.birthday }}</p>
+                                        <p><strong>Gender:</strong> {{ r.gender }}</p>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <p><strong>Address:</strong> {{ r.address }}</p>
+                                        <p><strong>Parent Name:</strong> {{ r.parent_name }}</p>
+                                        <p><strong>Parent Contact:</strong> {{ r.parent_contact }}</p>
+                                        <p><strong>School Year:</strong> {{ r.school_year }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </td>
+                </tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% endif %}
+</div>
+
+<!-- FIXED ARROW SCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".details-btn");
+
+    buttons.forEach(btn => {
+        const targetId = btn.getAttribute("data-target");
+        const collapseDiv = document.getElementById(targetId);
+        const arrow = btn.querySelector(".arrow");
+
+        collapseDiv.addEventListener("show.bs.collapse", () => {
+            arrow.classList.add("rotate");
+        });
+
+        collapseDiv.addEventListener("hide.bs.collapse", () => {
+            arrow.classList.remove("rotate");
+        });
+
+        // Manual toggle when button is clicked
+        btn.addEventListener("click", () => {
+            new bootstrap.Collapse(collapseDiv, { toggle: true });
+        });
+    });
+});
+</script>
+
+{% endblock %}
