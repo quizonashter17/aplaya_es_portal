@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-card">
+  <div class="page-card-header">
+    <h3>Schedule</h3>
+    <div class="filter-right">
+      <select id="viewSelect" class="small-select">
+        <option>Week View</option>
+        <option>Day View</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="schedule-grid">
+    <div class="time-col">
+      <!-- static times -->
+      {% for hour in range(7,19) %}
+        <div class="time-slot">{{ "%02d:00"|format(hour) }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="days-col">
+      {% for day in weekday_order %}
+        <div class="day-column">
+          <div class="day-header">{{ day }}</div>
+          <div class="day-events">
+            {% for ev in schedule.get(day, []) %}
+              <div class="event">
+                <div class="event-time">{{ ev.start }} - {{ ev.end }}</div>
+                <div class="event-title">{{ ev.subject_code }} — {{ ev.section }}</div>
+                <div class="event-room">{{ ev.room }}</div>
+              </div>
+            {% else %}
+              <div class="no-event">&nbsp;</div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -61,11 +61,24 @@
 
       <!-- ===== Teacher Menus ===== -->
       {% if user_role == 'teacher' %}
-      <a href="{{ url_for('teacher_students') }}" class="menu-item {% if active == 'teachers_students' %}active{% endif %}">
-        <img src="{{ url_for('static', filename='icons/teachers.png') }}" alt="My Students Icon"> 
-        <span>My Students</span>
-      </a>
-      {% endif %}
+
+<!-- My Students -->
+
+
+<!-- Class List (PASTE HERE) -->
+<a href="{{ url_for('class_list') }}" class="menu-item {% if active == 'class_list' %}active{% endif %}">
+  <img src="{{ url_for('static', filename='icons/teachers.png') }}" alt="Class List"> 
+  <span>Class List</span>
+</a>
+
+<!-- Schedule View (PASTE HERE) -->
+<a href="{{ url_for('schedule_view') }}" class="menu-item {% if active == 'schedule' %}active{% endif %}">
+  <img src="{{ url_for('static', filename='icons/schedule.png') }}" alt="Schedule"> 
+  <span>Schedule</span>
+</a>
+
+{% endif %}
+
 
       <!-- ===== Student Menus ===== -->
       {% if user_role == 'student' %}

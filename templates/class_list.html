@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-card">
+  <div class="page-card-header">
+    <h3>Class List</h3>
+    <div class="filter-right">
+      <select id="termSelect" class="small-select">
+        <option>First (1st) Quarter</option>
+        <option>Second (2nd) Quarter</option>
+        <option>Third (3rd) Quarter</option>
+        <option>Fourth (4th) Quarter</option>
+      </select>
+    </div>
+  </div>
+<div class="page-card-header">
+  
+  <div>
+      <a href="{{ url_for('add_student') }}" class="btn btn-primary">+ Add Student</a>
+      <a href="{{ url_for('add_subject') }}" class="btn btn-primary">+ Add Subject</a>
+      <a href="{{ url_for('add_class_load') }}" class="btn btn-primary">+ Add Class Load</a>
+  </div>
+</div>
+
+  <div class="table-wrap">
+    <table class="aplaya-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Section</th>
+          <th>Code</th>
+          <th>Subject</th>
+          <th>Course Code</th>
+          <th>Course</th>
+          <th>Units</th>
+          <th>Total Students</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ row.section }}</td>
+          <td>{{ row.subject_code }}</td>
+          <td class="subject-name">{{ row.subject_name }}</td>
+          <td>{{ row.course_code }}</td>
+          <td>{{ row.course }}</td>
+          <td class="text-center">{{ row.units }}</td>
+          <td class="text-center">{{ row.total_students }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center">No class load found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

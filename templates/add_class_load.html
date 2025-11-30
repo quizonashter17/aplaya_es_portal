@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-card">
+  <div class="page-card-header">
+    <h3>Add Class Load</h3>
+  </div>
+
+  <form method="POST" class="form-grid">
+
+    <div class="form-group full">
+      <label>Section</label>
+      <select name="section_id" required>
+        <option value="">-- Select Section --</option>
+        {% for s in sections %}
+          <option value="{{ s.id }}">{{ s.section_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group full">
+      <label>Subject</label>
+      <select name="subject_id" required>
+        <option value="">-- Select Subject --</option>
+        {% for sb in subjects %}
+          <option value="{{ sb.id }}">{{ sb.subject_code }} - {{ sb.subject_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Units</label>
+      <input type="number" name="units" value="3">
+    </div>
+
+    <div class="form-group">
+      <label>Day</label>
+      <select name="day">
+        <option value="">-- Select --</option>
+        <option>Monday</option>
+        <option>Tuesday</option>
+        <option>Wednesday</option>
+        <option>Thursday</option>
+        <option>Friday</option>
+        <option>Saturday</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Start Time</label>
+      <input type="time" name="start_time">
+    </div>
+
+    <div class="form-group">
+      <label>End Time</label>
+      <input type="time" name="end_time">
+    </div>
+
+    <div class="form-group full">
+      <label>Room</label>
+      <input type="text" name="room">
+    </div>
+
+    <div class="form-actions full">
+      <button type="submit" class="btn btn-primary">Save</button>
+      <a href="{{ url_for('class_list') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}
